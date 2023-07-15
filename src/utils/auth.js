@@ -7,7 +7,7 @@ function checkServerStatus(res) {
   return Promise.reject(`Ошибка: ${res.status}`);
 }
 
-function registration(password, email) {
+function register(password, email) {
   return fetch(`${BASE_URL}/signup`, {
     method: 'POST',
     headers: {
@@ -17,7 +17,7 @@ function registration(password, email) {
   }).then((res) => checkServerStatus(res));
 }
 
-function authorization(password, email) {
+function authorize(password, email) {
   return fetch(`${BASE_URL}/signin`, {
     method: 'POST',
     headers: {
@@ -37,4 +37,4 @@ function checkTokenValid(token) {
   }).then((res) => checkServerStatus(res));
 }
 
-export { registration, authorization, checkTokenValid };
+export { register, authorize, checkTokenValid };

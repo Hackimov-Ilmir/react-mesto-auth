@@ -14,7 +14,9 @@ import Register from './Register';
 import Login from './Login';
 import ProtectedRoute from './ProtectedRoute';
 import InfoTooltip from './InfoTooltip';
-import { registration, authorization, checkTokenValid } from '../utils/auth';
+import { register, authorize, checkTokenValid } from '../utils/auth';
+import success from '../images/success.png';
+import fail from '../images/fail.png';
 
 function App() {
   const [isEditProfilePopupOpen, setEditProfilePopupOpen] =
@@ -34,26 +36,30 @@ function App() {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    api
-      .getInitialCards()
-      .then((data) => {
-        setCards(data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+    if (loggedIn) {
+      api
+        .getInitialCards()
+        .then((data) => {
+          setCards(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [loggedIn]);
 
   React.useEffect(() => {
-    api
-      .getUserInfo()
-      .then((data) => {
-        setCurrentUser(data);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  }, []);
+    if (loggedIn) {
+      api
+        .getUserInfo()
+        .then((data) => {
+          setCurrentUser(data);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [loggedIn]);
 
   function handleEditAvatarClick() {
     setEditAvatarPopupOpen(true);
@@ -154,16 +160,16 @@ function App() {
       });
   }
 
-  function onRegister() {
+  function openSuccessTooltip() {
     setIsInfoTooltipPopupOpen(true);
     setTooltipTitle('Вы успешно зарегистрировались!');
-    setTooltipIcon('success');
+    setTooltipIcon(success);
   }
 
-  function onFail() {
+  function openFailTooltip() {
     setIsInfoTooltipPopupOpen(true);
     setTooltipTitle('Что-то пошло не так! Попробуйте ещё раз.');
-    setTooltipIcon('fail');
+    setTooltipIcon(fail);
   }
 
   function checkToken() {
@@ -184,7 +190,7 @@ function App() {
   }, []);
 
   function handleLogin(password, email) {
-    authorization(password, email)
+    authorize(password, email)
       .then((res) => {
         localStorage.setItem('jwt', res.token);
         setLoggedIn(true);
@@ -192,19 +198,19 @@ function App() {
         setEmail(email);
       })
       .catch((err) => {
-        onFail();
+        openFailTooltip();
         console.log(err);
       });
   }
 
   function handleRegister(password, email) {
-    registration(password, email)
+    register(password, email)
       .then(() => {
         navigate('/sign-in');
-        onRegister();
+        openSuccessTooltip();
       })
       .catch((err) => {
-        onFail();
+        openFailTooltip();
         console.log(err);
       });
   }
@@ -226,7 +232,8 @@ function App() {
                   <>
                     <Header
                       link={`/sign-up`}
-                      text={`${email} Выйти`}
+                      text={`Выйти`}
+                      email={email}
                       signOut={signOut}
                     />
                     <ProtectedRoute
@@ -262,8 +269,17 @@ function App() {
                   </>
                 }
               />
+              <Route
+                path='/*'
+                element={
+                  loggedIn ? (
+                    <Navigate to='/' replace />
+                  ) : (
+                    <Navigate to='/sign-in' replace />
+                  )
+                }
+              />
             </Routes>
-
             <EditProfilePopup
               isOpen={isEditProfilePopupOpen}
               onClose={closeAllPopups}
@@ -279,15 +295,7 @@ function App() {
               onClose={closeAllPopups}
               onUpdateAvatar={handleUpdateAvatar}
             />
-            <PopupWithForm title='Вы уверены?' name='delete-confirm'>
-              <button className='popup__delete-confirm-button' type='submit'>
-                Да
-              </button>
-            </PopupWithForm>
-            <ImagePopup
-              card={selectedCard}
-              onClose={closeAllPopups}
-            ></ImagePopup>
+            <ImagePopup card={selectedCard} onClose={closeAllPopups} />
             <InfoTooltip
               title={tooltipTitle}
               icon={tooltipIcon}

@@ -22,7 +22,7 @@ function Card({ card, onCardClick, onCardLike, onCardDelete }) {
     <div className='card'>
       <img
         src={card.link}
-        alt=''
+        alt={card.name}
         className='card__image'
         onClick={handleClick}
       />
